@@ -1,10 +1,13 @@
 package cmd
 
 import (
+    "bufio"
     "fmt"
     "os"
+    "strings"
 
     clipboard "github.com/atotto/clipboard"
+    log "github.com/sirupsen/logrus"
     "github.com/spf13/cobra"
     "github.com/spf13/viper"
 )
@@ -16,22 +19,41 @@ var (
     myLinkKey      = "myLink"
 )
 
+func getLine(s string) string {
+    fmt.Printf("%s: ", s)
+    reader := bufio.NewReader(os.Stdin)
+    input, err := reader.ReadString('\n')
+    if err != nil {
+        log.Info("Something went wrong getting input from stdin")
+    }
+    return strings.Replace(input, "\n", "", -1)
+}
+
 func NewCommand() *cobra.Command {
+    var name string
+
     var command = &cobra.Command{
         Use:   "zoom",
-        Short: "argo is the command line interface to Argo",
+        Short: "some useful commands for using Zoom",
         Run: func(cmd *cobra.Command, args []string) {
-            if ok := viper.IsSet(myLinkKey); ok {
+            if name != "" {
+                link := viper.GetString(name)
+                if link != "" {
+                    clipboard.WriteAll(link)
+                } else {
+                    log.Error("You haven't set that link yet!")
+                }
+            } else {
                 myLink := viper.GetString(myLinkKey)
                 clipboard.WriteAll(myLink)
                 fmt.Println("Copied personal meeting link to clipboard")
-            } else {
-                cmd.HelpFunc()(cmd, args)
             }
         },
     }
 
     command.AddCommand(NewInitCommand())
+    command.AddCommand(NewAddCommand())
+    command.AddCommand(NewResetCommand())
 
     command.PersistentPreRun = func(cmd *cobra.Command, args []string) {
         viper.AddConfigPath(configFilePath)
@@ -44,6 +66,9 @@ func NewCommand() *cobra.Command {
             }
         }
     }
+
+    command.Flags().StringVarP(&name, "name", "n", "", "name of zoom meeting to copy")
+
     return command
 }
 

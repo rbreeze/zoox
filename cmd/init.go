@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"bufio"
-	"fmt"
 	"os"
 
 	clipboard "github.com/atotto/clipboard"
@@ -10,16 +8,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
-
-func getLine(s string) string {
-	fmt.Printf("%s: ", s)
-	reader := bufio.NewReader(os.Stdin)
-	input, err := reader.ReadString('\n')
-	if err != nil {
-		log.Info("Something went wrong getting input from stdin")
-	}
-	return input
-}
 
 func NewInitCommand() *cobra.Command {
 	var initCmd = &cobra.Command{
@@ -30,11 +18,16 @@ func NewInitCommand() *cobra.Command {
 			viper.Set("myLink", myLink)
 			clipboard.WriteAll(myLink)
 
-			viper.AddConfigPath(configFilePath)
-			viper.SetConfigName(configFileName)
-			viper.SetConfigType(configFileType)
+			if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
+				os.Mkdir(configFilePath, 0700)
+			}
 
-			err := viper.WriteConfig()
+			_, err := os.OpenFile(configFilePath+"/"+configFileName, os.O_RDONLY|os.O_CREATE, 0700)
+			if err != nil {
+				log.Errorf("Error creating config file: %s", err)
+			}
+
+			err = viper.WriteConfig()
 			if err != nil {
 				log.Warnf("Error saving config: %s", err)
 			}
