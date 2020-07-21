@@ -20,6 +20,7 @@ func NewResetCommand() *cobra.Command {
 				if yString == "Y" {
 					yes = true
 				} else {
+					fmt.Println("Reset cancelled")
 					return
 				}
 			}

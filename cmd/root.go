@@ -40,6 +40,7 @@ func NewCommand() *cobra.Command {
                 link := viper.GetString(name)
                 if link != "" {
                     clipboard.WriteAll(link)
+                    fmt.Println("Copied meeting link for %s", name)
                 } else {
                     log.Error("You haven't set that link yet!")
                 }
