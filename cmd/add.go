@@ -18,10 +18,10 @@ func NewAddCommand() *cobra.Command {
 		Short: "add a zoom meeting link",
 		Run: func(cmd *cobra.Command, args []string) {
 			if name == "" {
-				name = getLine("Enter a name for the meeting you'd like to add")
+				name = GetLine("Enter a meeting name:")
 			}
 			if link == "" {
-				link = getLine("Enter the link for this meeting")
+				link = GetLine("Enter meeting link:")
 			}
 
 			viper.Set(name, link)
@@ -43,7 +43,7 @@ func NewAddCommand() *cobra.Command {
 		},
 	}
 
-    addCmd.Flags().StringVarP(&name, "name", "n", "", "name of zoom meeting to add") 
-    addCmd.Flags().StringVarP(&link, "link", "l", "", "link for zoom meeting to add") 
+    addCmd.Flags().StringVarP(&name, "name", "n", "", "meeting name") 
+    addCmd.Flags().StringVarP(&link, "link", "l", "", "meeting link") 
 	return addCmd
 }

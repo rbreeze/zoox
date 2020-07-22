@@ -13,14 +13,14 @@ func NewResetCommand() *cobra.Command {
 
 	var resetCmd = &cobra.Command{
 		Use:   "reset",
-		Short: "reset your zoom cli configuration",
+		Short: "reset zoox configuration",
 		Run: func(cmd *cobra.Command, args []string) {
 			if !yes {
-				yString := getLine("Are you sure? This will remove your zoom CLI configuration (type Y to confirm)")
+				yString := GetLine("Are you sure? (type Y to confirm):")
 				if yString == "Y" {
 					yes = true
 				} else {
-					fmt.Println("Reset cancelled")
+					fmt.Println("Reset cancelled.")
 					return
 				}
 			}
@@ -29,7 +29,7 @@ func NewResetCommand() *cobra.Command {
 				if err != nil {
 					log.Error(err)
 				} else {
-					fmt.Println("zoom CLI configuration reset")
+					fmt.Println("Configuration reset.")
 				}
 			}
 		},

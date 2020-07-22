@@ -6,48 +6,53 @@ import (
     "os"
     "strings"
 
-    clipboard "github.com/atotto/clipboard"
     log "github.com/sirupsen/logrus"
     "github.com/spf13/cobra"
     "github.com/spf13/viper"
 )
 
 var (
-    configFilePath = os.Getenv("HOME") + "/.zoom"
+    configFilePath = os.Getenv("HOME") + "/.zoox"
     configFileType = "yaml"
     configFileName = "config.yaml"
-    myLinkKey      = "myLink"
+    defaultKey     = "default"
 )
 
-func getLine(s string) string {
-    fmt.Printf("%s: ", s)
+type ErrorMessage string
+
+const (
+    LinkNotSet ErrorMessage = "Link not set"
+)
+
+func GetLine(s string) string {
+    fmt.Printf("%s ", s)
     reader := bufio.NewReader(os.Stdin)
     input, err := reader.ReadString('\n')
     if err != nil {
-        log.Info("Something went wrong getting input from stdin")
+        log.Error(err)
     }
     return strings.Replace(input, "\n", "", -1)
 }
 
-func NewCommand() *cobra.Command {
-    var name string
+func GetArg(args []string, n int, defaultVal string) string {
+    if len(args) > n {
+        return args[n]
+    } else {
+        return defaultVal
+    }
+}
 
+func NewCommand() *cobra.Command {
     var command = &cobra.Command{
-        Use:   "zoom",
+        Use:   "zoox",
         Short: "some useful commands for using Zoom",
         Run: func(cmd *cobra.Command, args []string) {
-            if name != "" {
-                link := viper.GetString(name)
-                if link != "" {
-                    clipboard.WriteAll(link)
-                    fmt.Printf("Copied meeting link for %s\n", name)
-                } else {
-                    log.Error("You haven't set that link yet!")
-                }
+            name := GetArg(args, 0, defaultKey)
+            link := viper.GetString(name)
+            if link != "" {
+                fmt.Println(link)
             } else {
-                myLink := viper.GetString(myLinkKey)
-                clipboard.WriteAll(myLink)
-                fmt.Println("Copied personal meeting link to clipboard")
+                log.Error(LinkNotSet)
             }
         },
     }
@@ -55,6 +60,9 @@ func NewCommand() *cobra.Command {
     command.AddCommand(NewInitCommand())
     command.AddCommand(NewAddCommand())
     command.AddCommand(NewResetCommand())
+    command.AddCommand(NewCopyCommand())
+    command.AddCommand(NewGetCommand())
+    command.AddCommand(NewOpenCommand())
 
     command.PersistentPreRun = func(cmd *cobra.Command, args []string) {
         viper.AddConfigPath(configFilePath)
@@ -62,19 +70,23 @@ func NewCommand() *cobra.Command {
         viper.SetConfigType(configFileType)
         if err := viper.ReadInConfig(); err != nil {
             if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-                fmt.Println("Configuration not found. Let's get started!")
-                NewInitCommand().Execute()
+                if cmd.Name() == "init" {
+                    return
+                } else if cmd.Name() == "reset" {
+                    log.Warn("Configuration not reset because it doesn't exist.")
+                } else {
+                    log.Warn("No links found. Run zoox init to fix this.")
+                }
+                os.Exit(0)
             }
         }
     }
-
-    command.Flags().StringVarP(&name, "name", "n", "", "name of zoom meeting to copy")
 
     return command
 }
 
 var rootCmd = &cobra.Command{
-    Use:   "zoom",
+    Use:   "zoox",
     Short: "some useful commands for using Zoom",
 }
 

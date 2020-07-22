@@ -1,5 +1,5 @@
 build: 
-	go build -o dist/zoom main.go
+	go build -o dist/zoox main.go
 
 install: build
-	mv dist/zoom /usr/local/bin
+	mv dist/zoox /usr/local/bin
