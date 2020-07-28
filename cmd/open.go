@@ -32,7 +32,7 @@ func parseZoomURL(raw string) *ZoomData {
 }
 
 func constructZoomClientURL(data *ZoomData) string {
-	return "zoommtg://" + data.host + "/join?confNo=" + data.confNo + "&pwd=" + data.password
+	return "zoommtg://" + data.host + "/start?action=start&confno=" + data.confNo + "&pwd=" + data.password
 }
 
 func NewOpenCommand() *cobra.Command {
